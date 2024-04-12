@@ -121,19 +121,23 @@ fn write_data(data: Vec<FileResult>, filename: &str) -> Result<(), Box<dyn Error
 
 fn main() {
     // Specify the path to the directory you want to start the recursive iteration
-    let directory_path = "/Volumes/Finance/";
+    let directory_path = "/Volumes/ESG/";
     // let directory_path = "/Users/hkirkwoo/Projects";
     println!("Now inspecting \x1b[0;35m{}\x1b[0m", &directory_path);
     // Use the Path type to create a path from the directory path string
     let path = Path::new(directory_path);
     let threads: usize = 50;
+    let out_file = "DFS_audit.csv";
+    // "Benchmarking"
     let start = std::time::Instant::now();
     let processed_files = visit_dirs(path, threads);
     let time_processing = start.elapsed();
     let untouched_files = processed_files.len();
     let middle = std::time::Instant::now();
-    match write_data(processed_files, "DFS_audit.csv") {
-        Ok(_) => {}
+    match write_data(processed_files, out_file) {
+        Ok(_) => {
+            println!("Data written to {}", out_file);
+        }
         Err(err) => {
             eprintln!("Error {}", err);
         }
