@@ -6,6 +6,7 @@ use rayon::prelude::*;
 use std::path::Path;
 // use walkdir::WalkDir;
 use jwalk::WalkDir;
+use rust_xlsxwriter::Workbook;
 use std::sync::Mutex;
 
 #[derive(Debug, Clone)]
@@ -39,6 +40,7 @@ fn return_access_stamp(file: &Path) -> Result<FileResult, Box<dyn std::error::Er
         Err(format!("File accessed at {}.", readable_time).into())
     }
 }
+
 /**
   Checks to see if a given date is within the last days_since days.
   ```
@@ -53,10 +55,12 @@ fn check_within_spec_time(date: DateTime<Utc>, days_since: i64) -> bool {
     let time_in_past = current_date - Duration::days(days_since);
     date >= time_in_past && date <= current_date
 }
+
 fn visit_dirs(dir: &Path) -> Vec<FileResult> {
     // let mut counter = 0;
     let all_files = Mutex::new(Vec::new()); // Use Mutex for interior mutability
-    let entries: Vec<_> = WalkDir::new(dir).into_iter().collect();
+    let entries: Vec<_> = WalkDir::new(dir).sort(true).into_iter().collect();
+    println!("Total files found: \x1b[0;32m{}\x1b[0m", entries.len());
     if dir.is_dir() {
         entries.par_iter().for_each(|entry| match entry {
             Ok(entry) => {
@@ -88,14 +92,32 @@ fn visit_dirs(dir: &Path) -> Vec<FileResult> {
     } else {
         println!("Not a directory: \x1b[0;31m{:?}\x1b[0m", dir);
     }
-    println!("Total files walked: \x1b[0;32m{}\x1b[0m", entries.len());
     let guard = all_files.lock().unwrap(); // Lock the Mutex
     guard.clone() // Clone the Vec inside the Mutex
 }
 
+fn write_to_excel(
+    all_files: Vec<FileResult>,
+    save_path: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut workbook = Workbook::new();
+    let worksheet = workbook.add_worksheet();
+    let _ = worksheet.write_string(0, 0, "Path");
+    let _ = worksheet.write_string(0, 1, "Last accessed");
+
+    for (row, result) in all_files.iter().enumerate() {
+        let with_header: usize = row + 1;
+        worksheet.write_string(with_header as u32, 0, &result.path)?;
+        worksheet.write_string(with_header as u32, 1, &result.accessed)?;
+    }
+    let _ = workbook.save(save_path);
+
+    Ok(())
+}
+
 fn main() {
     // Specify the path to the directory you want to start the recursive iteration
-    let directory_path = "/Volumes/SPA/";
+    let directory_path = "/Volumes/DSP/";
     // let directory_path = "/Users/hkirkwoo/Projects";
     println!("Now inspecting \x1b[0;35m{}\x1b[0m", &directory_path);
     // Use the Path type to create a path from the directory path string
@@ -106,15 +128,23 @@ fn main() {
     let time_processing = start.elapsed();
     let untouched_files = processed_files.len();
     let middle = std::time::Instant::now();
-    for file in processed_files {
-        println!("{}, {}", file.path, file.accessed);
+    // for file in processed_files {
+    //     println!("{}, {}", file.path, file.accessed);
+    // }
+    match write_to_excel(processed_files, "./DFS_audit.xlsx") {
+        Ok(()) => {
+            println!("Results written to file.");
+        }
+        Err(err) => {
+            eprintln!("Oh no! Failllll! {}", err);
+        }
     }
     println!(
         "Time taken processing: \x1b[0;32m{:?}\x1b[0m",
         time_processing
     );
     println!(
-        "Time taken printing output: \x1b[0;32m{:?}\x1b[0m",
+        "Time taken writing output: \x1b[0;32m{:?}\x1b[0m",
         middle.elapsed()
     );
     println!("Total time taken: \x1b[0;32m{:?}\x1b[0m", start.elapsed());

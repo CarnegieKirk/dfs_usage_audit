@@ -1,6 +1,6 @@
 [package]
 name = "dfs_usage_audit"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -9,4 +9,5 @@ edition = "2021"
 chrono = "0.4.37"
 jwalk = "0.8.1"
 rayon = "1.10.0"
+rust_xlsxwriter = "0.64.1"
 walkdir = "2.5.0"
