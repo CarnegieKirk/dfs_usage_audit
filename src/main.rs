@@ -1,12 +1,12 @@
-use std::fs;
 use std::os::macos::fs::MetadataExt;
+use std::{error::Error, fs};
 extern crate chrono;
 use chrono::{DateTime, Duration, Utc};
 use rayon::prelude::*;
 use std::path::Path;
 // use walkdir::WalkDir;
+use csv::Writer;
 use jwalk::WalkDir;
-use rust_xlsxwriter::Workbook;
 use std::sync::Mutex;
 
 #[derive(Debug, Clone)]
@@ -56,12 +56,22 @@ fn check_within_spec_time(date: DateTime<Utc>, days_since: i64) -> bool {
     date >= time_in_past && date <= current_date
 }
 
-fn visit_dirs(dir: &Path) -> Vec<FileResult> {
+fn visit_dirs(dir: &Path, threads: usize) -> Vec<FileResult> {
     // let mut counter = 0;
+    let start = std::time::Instant::now();
     let all_files = Mutex::new(Vec::new()); // Use Mutex for interior mutability
-    let entries: Vec<_> = WalkDir::new(dir).sort(true).into_iter().collect();
-    println!("Total files found: \x1b[0;32m{}\x1b[0m", entries.len());
+    let entries: Vec<_> = WalkDir::new(dir)
+        .parallelism(jwalk::Parallelism::RayonNewPool(threads))
+        .into_iter()
+        .collect();
+    println!("Total files:: \x1b[0;31m{:?}\x1b[0m", &entries.len());
+    println!("Building Vec took: \x1b[0;32m{:?}\x1b[0m", start.elapsed());
     if dir.is_dir() {
+        // Thread count for the par_iter()
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .unwrap();
         entries.par_iter().for_each(|entry| match entry {
             Ok(entry) => {
                 let path = entry.path();
@@ -92,51 +102,40 @@ fn visit_dirs(dir: &Path) -> Vec<FileResult> {
     } else {
         println!("Not a directory: \x1b[0;31m{:?}\x1b[0m", dir);
     }
+    println!("Total files walked: \x1b[0;32m{}\x1b[0m", entries.len());
     let guard = all_files.lock().unwrap(); // Lock the Mutex
     guard.clone() // Clone the Vec inside the Mutex
 }
+fn write_data(data: Vec<FileResult>, filename: &str) -> Result<(), Box<dyn Error>> {
+    let header = vec!["path", "accessed"];
+    let mut writer = Writer::from_path(filename)?;
 
-fn write_to_excel(
-    all_files: Vec<FileResult>,
-    save_path: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let mut workbook = Workbook::new();
-    let worksheet = workbook.add_worksheet();
-    let _ = worksheet.write_string(0, 0, "Path");
-    let _ = worksheet.write_string(0, 1, "Last accessed");
+    writer.write_record(&header)?;
 
-    for (row, result) in all_files.iter().enumerate() {
-        let with_header: usize = row + 1;
-        worksheet.write_string(with_header as u32, 0, &result.path)?;
-        worksheet.write_string(with_header as u32, 1, &result.accessed)?;
+    for row in data {
+        writer.write_record(&[row.path, row.accessed])?;
     }
-    let _ = workbook.save(save_path);
 
     Ok(())
 }
 
 fn main() {
     // Specify the path to the directory you want to start the recursive iteration
-    let directory_path = "/Volumes/DSP/";
+    let directory_path = "/Volumes/Finance/";
     // let directory_path = "/Users/hkirkwoo/Projects";
     println!("Now inspecting \x1b[0;35m{}\x1b[0m", &directory_path);
     // Use the Path type to create a path from the directory path string
     let path = Path::new(directory_path);
-    // Call the recursive function to iterate through the directory and its subdirectories
+    let threads: usize = 50;
     let start = std::time::Instant::now();
-    let processed_files = visit_dirs(path);
+    let processed_files = visit_dirs(path, threads);
     let time_processing = start.elapsed();
     let untouched_files = processed_files.len();
     let middle = std::time::Instant::now();
-    // for file in processed_files {
-    //     println!("{}, {}", file.path, file.accessed);
-    // }
-    match write_to_excel(processed_files, "./DFS_audit.xlsx") {
-        Ok(()) => {
-            println!("Results written to file.");
-        }
+    match write_data(processed_files, "DFS_audit.csv") {
+        Ok(_) => {}
         Err(err) => {
-            eprintln!("Oh no! Failllll! {}", err);
+            eprintln!("Error {}", err);
         }
     }
     println!(
@@ -144,7 +143,7 @@ fn main() {
         time_processing
     );
     println!(
-        "Time taken writing output: \x1b[0;32m{:?}\x1b[0m",
+        "Time taken printing output: \x1b[0;32m{:?}\x1b[0m",
         middle.elapsed()
     );
     println!("Total time taken: \x1b[0;32m{:?}\x1b[0m", start.elapsed());
