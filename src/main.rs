@@ -1,4 +1,5 @@
-use std::os::macos::fs::MetadataExt;
+// use std::os::macos::fs::MetadataExt;
+use filetime::{self, FileTime};
 use std::{error::Error, fs};
 extern crate chrono;
 use chrono::{DateTime, Duration, Utc};
@@ -22,10 +23,10 @@ impl std::fmt::Display for FileResult {
 }
 
 fn return_access_stamp(file: &Path) -> Result<FileResult, Box<dyn std::error::Error>> {
-    let meta = fs::metadata(file)?;
+    let metadata = fs::metadata(file)?;
     // Shows the timestamp of the last access date. (st_(access)time)
-    let timestamp = meta.st_atime();
-    let datetime = DateTime::<Utc>::from_timestamp(timestamp, 0).unwrap();
+    let access_time = FileTime::from_last_access_time(&metadata).unix_seconds();
+    let datetime = DateTime::<Utc>::from_timestamp(access_time, 0).unwrap();
     // Format the datetime how you want
     let readable_time = &datetime.format("%Y-%m-%d %H:%M:%S");
     // Print the newly formatted date and time
