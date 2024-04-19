@@ -15,6 +15,8 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
+    #[arg(short, long, default_value_t = String::from("DFS_audit.csv") ) ]
+    out_file: String,
     #[arg(short, long)]
     path: String,
 
@@ -62,7 +64,7 @@ fn return_access_stamp(
 /**
   Checks to see if a given date is within the last days_since days.
   ```
-  // Three years
+  // TODO: Three years
   let access_cutoff: i64 = 1095;
   let datetime: DateTime<Utc> = DateTime::from_naive_utc_and_offset(file_time_readable, Utc);
   check_within_spec_time(datetime, access_cutoff);
@@ -147,14 +149,14 @@ fn main() {
     let path = Path::new(&directory_path);
     let threads: usize = args.threads;
     let access_cufoff = args.days;
-    let out_file = "DFS_audit.csv";
+    let out_file = args.out_file;
     // "Benchmarking"
     let start = std::time::Instant::now();
     let processed_files = visit_dirs(path, threads, access_cufoff);
     let time_processing = start.elapsed();
     let untouched_files = processed_files.len();
     let middle = std::time::Instant::now();
-    match write_data(processed_files, out_file) {
+    match write_data(processed_files, &out_file) {
         Ok(_) => {
             println!("Data written to {}", out_file);
         }
