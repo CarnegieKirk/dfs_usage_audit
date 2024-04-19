@@ -20,6 +20,8 @@ struct Args {
 
     #[arg(short, long, default_value_t = 50)]
     threads: usize,
+    #[arg(short, long, default_value_t = 1095)]
+    days: i64,
 }
 
 #[derive(Debug, Clone)]
@@ -144,7 +146,7 @@ fn main() {
     // Use the Path type to create a path from the directory path string
     let path = Path::new(&directory_path);
     let threads: usize = args.threads;
-    let access_cufoff = 1096;
+    let access_cufoff = args.days;
     let out_file = "DFS_audit.csv";
     // "Benchmarking"
     let start = std::time::Instant::now();
