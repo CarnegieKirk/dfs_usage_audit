@@ -48,7 +48,7 @@ choco install mingw
 <details>
     <summary> <h3>Mac Dependancies</h3></summary>
 
-**Installing Deps**
+**Installing Homebrew**
 
 
 ```bash
