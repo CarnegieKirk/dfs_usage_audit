@@ -71,7 +71,7 @@ brew install mingw-w64
 **cross-compiling**
 
 ```bash
-git clone https://github.com/HirschyKirkwood-Work/dfs_usage_audit.git
+git clone https://github.com/CarnegieKirk/dfs_usage_audit.git
 cd dfs_usage_audit 
 # Build Both
 cargo build --release --target aarch64-apple-darwin
@@ -102,7 +102,7 @@ target
 Please see the dependancies section above for OS-specific requirements.
 
 ```bash
-git clone https://github.com/HirschyKirkwood-Work/dfs_usage_audit.git
+git clone https://github.com/CarnegieKirk/dfs_usage_audit.git
 cd dfs_usage_audit 
 cargo build --release
 # File structure will look liek this:
