@@ -2,9 +2,15 @@
 
 ## Installation
 
-You can either download the latest release from the realeases page, or you can build it from source.
+You can either download the latest release from the realeases page, or you can build it from source (recommended).
+
+***Note: For Windows***
+See [RustLang's site](https://www.rust-lang.org/tools/install) for the windows exe
+Other oses, see below:
 
 ```bash
+# Install Rust if needed
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # Requires Git
 git clone https://github.com/HirschyKirkwood-Work/dfs_usage_audit.git
 cd dfs_usage_audit 
