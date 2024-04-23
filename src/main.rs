@@ -153,9 +153,7 @@ fn main() {
     // "Benchmarking"
     let start = std::time::Instant::now();
     let processed_files = visit_dirs(path, threads, access_cufoff);
-    let time_processing = start.elapsed();
     let untouched_files = processed_files.len();
-    let middle = std::time::Instant::now();
     match write_data(processed_files, &out_file) {
         Ok(_) => {
             println!("Data written to {}", out_file);
@@ -164,14 +162,6 @@ fn main() {
             eprintln!("Error {}", err);
         }
     }
-    println!(
-        "Time taken processing: \x1b[0;32m{:?}\x1b[0m",
-        time_processing
-    );
-    println!(
-        "Time taken printing output: \x1b[0;32m{:?}\x1b[0m",
-        middle.elapsed()
-    );
     println!("Total time taken: \x1b[0;32m{:?}\x1b[0m", start.elapsed());
     println!("Untouched files:: \x1b[0;31m{:?}\x1b[0m", untouched_files);
 }
