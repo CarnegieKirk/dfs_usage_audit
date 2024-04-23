@@ -8,6 +8,7 @@ You can either download the latest release from the realeases page, or you can b
     <summary> <h3>Windows Dependancies</h3></summary>
 See [RustLang's site](https://www.rust-lang.org/tools/install) for the windows install exe
 **Install Winget**
+
 ```PowerShell
 # Dep to install Chocolatey
 $progressPreference = 'silentlyContinue'
@@ -19,15 +20,21 @@ Add-AppxPackage Microsoft.VCLibs.x64.14.00.Desktop.appx
 Add-AppxPackage Microsoft.UI.Xaml.2.8.x64.appx
 Add-AppxPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
 ```
+
 Open New terminal
 **Install Chocolatey**
+
+
 ```PowerShell
 # Dep to install mingw
 winget install chocolatey
 # Install git dependencies
 winget install git
 ```
+
 Open New Terminal
+
+
 ```PowerShell
 # Installs ncessary build keychains etc.
 choco install mingw
@@ -37,6 +44,7 @@ choco install mingw
 
 <details>
     <summary> <h3>Mac Dependancies</h3></summary>
+
 **Installing Deps**
 
 
