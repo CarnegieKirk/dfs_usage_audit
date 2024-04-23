@@ -38,12 +38,15 @@ choco install mingw
 <details>
     <summary> <h3>Mac Dependancies</h3></summary>
 **Installing Deps**
+
+
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 Restart terminal emulator.
 
 **Install Deps**
+
 ```bash
 # Install Rust if needed
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -55,6 +58,7 @@ brew install mingw-w64
 ```
 
 **cross-compiling**
+
 ```bash
 git clone https://github.com/HirschyKirkwood-Work/dfs_usage_audit.git
 cd dfs_usage_audit 
