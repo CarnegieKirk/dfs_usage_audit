@@ -6,7 +6,9 @@ You can either download the latest release from the realeases page, or you can b
 ## Dependancies
 <details>
     <summary> <h3>Windows Dependancies</h3></summary>
+
 See [RustLang's site](https://www.rust-lang.org/tools/install) for the windows install exe
+
 **Install Winget**
 
 ```PowerShell
@@ -22,6 +24,7 @@ Add-AppxPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
 ```
 
 Open New terminal
+
 **Install Chocolatey**
 
 
