@@ -106,13 +106,9 @@ fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64) -> Vec<FileResult>
                     Err(err) => {
                         if let Some(io_err) = err.downcast_ref::<std::io::Error>() {
                             if io_err.kind() == std::io::ErrorKind::PermissionDenied {
-                                println!(
-                                    "System Error: \x1b[0;31m{}\x1b[0m - {}",
-                                    path.to_string_lossy(),
-                                    err
-                                );
+                                eprintln!("System Error: \x1b[0;31m{}\x1b[0m", err);
                             } else {
-                                println!("Not found error: \x1b[0;31m{}\x1b[0m", err);
+                                eprintln!("Not found error: \x1b[0;31m{}\x1b[0m", err);
                             }
                         }
                     }
@@ -123,7 +119,7 @@ fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64) -> Vec<FileResult>
             }
         });
     } else {
-        println!("Not a directory: \x1b[0;31m{:?}\x1b[0m", dir);
+        eprintln!("Not a directory: \x1b[0;31m{:?}\x1b[0m", dir);
     }
     println!("Total files walked: \x1b[0;32m{}\x1b[0m", entries.len());
     let guard = all_files.lock().expect("A valid mutex lock."); // Lock the Mutex
