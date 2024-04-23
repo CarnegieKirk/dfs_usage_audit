@@ -105,6 +105,15 @@ Please see the dependancies section above for OS-specific requirements.
 git clone https://github.com/HirschyKirkwood-Work/dfs_usage_audit.git
 cd dfs_usage_audit 
 cargo build --release
+# File structure will look liek this:
+target
+├── release
+│  ├── build
+│  ├── deps
+│  ├── dfs_usage_audit <--- This is your executable. For windows it will have the .exe extension
+│  ├── dfs_usage_audit.d
+│  ├── examples
+│  └── incremental
 ```
 </details>
 
