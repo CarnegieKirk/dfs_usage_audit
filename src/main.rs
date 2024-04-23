@@ -85,7 +85,10 @@ fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64) -> Vec<FileResult>
         .into_iter()
         .collect();
     println!("Total files:: \x1b[0;31m{:?}\x1b[0m", &entries.len());
-    println!("Building Vec took: \x1b[0;32m{:?}\x1b[0m", start.elapsed());
+    println!(
+        "Building Vec took: \x1b[0;32m{:.2?}\x1b[0m",
+        start.elapsed()
+    );
     if dir.is_dir() {
         // Thread count for the par_iter()
         rayon::ThreadPoolBuilder::new()
@@ -162,6 +165,6 @@ fn main() {
             eprintln!("Error {}", err);
         }
     }
-    println!("Total time taken: \x1b[0;32m{:?}\x1b[0m", start.elapsed());
+    println!("Total time taken: \x1b[0;32m{:.2?}\x1b[0m", start.elapsed());
     println!("Untouched files:: \x1b[0;31m{:?}\x1b[0m", untouched_files);
 }
