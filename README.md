@@ -78,9 +78,9 @@ target
       └── dfs_usage_audit.exe <--- Your executable is here (Windows)
 ```
 
+</details>
 ## Compilation
 
-</details>
 <details>
     <summary> <h3>Building</h3></summary>
 Please see the dependancies section above for OS-specific requirements.
@@ -91,8 +91,10 @@ cd dfs_usage_audit
 cargo build --release
 ```
 </details>
+
 ## Usage
-```
+
+```bash
 target/aarch64-apple-darwin/release/dfs_usage_audit --help
 Usage: dfs_usage_audit [OPTIONS] --path <PATH>
 
