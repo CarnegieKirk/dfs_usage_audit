@@ -1,6 +1,6 @@
 // use std::os::macos::fs::MetadataExt;
 use filetime::{self, FileTime};
-use std::{error::Error, fs};
+use std::{error::Error, fs, sync::Arc};
 extern crate chrono;
 use chrono::{DateTime, Duration, Utc};
 use rayon::prelude::*;
@@ -99,14 +99,15 @@ fn check_within_spec_time(date: DateTime<Utc>, days_since: i64) -> bool {
 fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64, dirs_only: bool) -> Vec<FileResult> {
     // let mut counter = 0;
     // Use Mutex for interior mutability
-    if dirs_only {
-        println!("Scanning for directories only.")
-    }
     let start = std::time::Instant::now();
     let all_files = Mutex::new(Vec::new());
+    let pb1 = Arc::new(Mutex::new(ProgressBar::new_spinner()));
     // NOTE: Filters out to be only dirs
     let entries: Vec<_> = WalkDir::new(dir)
         .parallelism(jwalk::Parallelism::RayonNewPool(threads))
+        .process_read_dir(move |_, _, _, _| {
+            pb1.lock().unwrap().inc(1);
+        })
         .into_iter()
         .collect();
     println!("Total files:: \x1b[0;31m{:?}\x1b[0m", &entries.len());
@@ -230,5 +231,15 @@ fn main() {
         }
     }
     println!("Total time taken: \x1b[0;32m{:.2?}\x1b[0m", start.elapsed());
-    println!("Untouched files:: \x1b[0;31m{:?}\x1b[0m", untouched_files);
+    match args.directories {
+        true => {
+            println!(
+                "Untouched directories: \x1b[0;31m{:?}\x1b[0m",
+                untouched_files
+            );
+        }
+        false => {
+            println!("Untouched files: \x1b[0;31m{:?}\x1b[0m", untouched_files);
+        }
+    }
 }
