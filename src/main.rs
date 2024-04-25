@@ -15,14 +15,34 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, default_value_t = String::from("DFS_audit.csv") ) ]
+    #[arg(short, long, help="Relative path to export audit results.",default_value_t = String::from("DFS_audit.csv") ) ]
     out_file: String,
-    #[arg(short, long)]
+    #[arg(
+        short,
+        help = "The path to the directory/DFS space you wish to audit.",
+        long
+    )]
     path: String,
-
-    #[arg(short, long, default_value_t = 50)]
+    #[arg(
+        short,
+        long,
+        help = "Whether to include only directories. Does not take a value",
+        action
+    )]
+    directories: bool,
+    #[arg(
+        short,
+        long,
+        help = "The amount of threads to use for performance.Higher is faster, but can be less accurate. I've found 50 to be the best tradeoff. Never inaccurate.",
+        default_value_t = 50
+    )]
     threads: usize,
-    #[arg(short, long, default_value_t = 1095)]
+    #[arg(
+        short,
+        long,
+        help = "Cut-off, in days, to include. e.g. 365 to show files not accessed in the last year.",
+        default_value_t = 1095
+    )]
     days: i64,
 }
 
@@ -76,10 +96,15 @@ fn check_within_spec_time(date: DateTime<Utc>, days_since: i64) -> bool {
     date >= time_in_past && date <= current_date
 }
 
-fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64) -> Vec<FileResult> {
+fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64, dirs_only: bool) -> Vec<FileResult> {
     // let mut counter = 0;
+    // Use Mutex for interior mutability
+    if dirs_only {
+        println!("Scanning for directories only.")
+    }
     let start = std::time::Instant::now();
-    let all_files = Mutex::new(Vec::new()); // Use Mutex for interior mutability
+    let all_files = Mutex::new(Vec::new());
+    // NOTE: Filters out to be only dirs
     let entries: Vec<_> = WalkDir::new(dir)
         .parallelism(jwalk::Parallelism::RayonNewPool(threads))
         .into_iter()
@@ -98,17 +123,46 @@ fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64) -> Vec<FileResult>
         entries.par_iter().for_each(|entry| match entry {
             Ok(entry) => {
                 let path = entry.path();
-                match return_access_stamp(&path, access_cutoff) {
-                    Ok(result) => {
-                        let mut guard = all_files.lock().expect("A Valid Mutex Guard"); // Lock the Mutex
-                        guard.push(result); // Mutate the Vec inside the Mutex
+                // NOTE: Match statement determines behavior based on the dirs_only bool which
+                // is passed by the user at run time
+                match (path.is_dir(), dirs_only) {
+                    // Always add directories.
+                    (true, true) | (true, false) => {
+                        // Check if the entry is a directory
+                        match return_access_stamp(&path, access_cutoff) {
+                            Ok(result) => {
+                                let mut guard = all_files.lock().expect("A Valid Mutex Guard"); // Lock the Mutex
+                                guard.push(result); // Mutate the Vec inside the Mutex
+                            }
+                            Err(err) => {
+                                if let Some(io_err) = err.downcast_ref::<std::io::Error>() {
+                                    if io_err.kind() == std::io::ErrorKind::PermissionDenied {
+                                        eprintln!("System Error: \x1b[0;31m{}\x1b[0m", err);
+                                    } else {
+                                        eprintln!("Not found error: \x1b[0;31m{}\x1b[0m", err);
+                                    }
+                                }
+                            }
+                        }
                     }
-                    Err(err) => {
-                        if let Some(io_err) = err.downcast_ref::<std::io::Error>() {
-                            if io_err.kind() == std::io::ErrorKind::PermissionDenied {
-                                eprintln!("System Error: \x1b[0;31m{}\x1b[0m", err);
-                            } else {
-                                eprintln!("Not found error: \x1b[0;31m{}\x1b[0m", err);
+                    (false, true) => {
+                        // We never want to add a file if the dirs_only bool is true
+                    }
+                    (false, false) => {
+                        // Default state: Do both files and dirs.
+                        match return_access_stamp(&path, access_cutoff) {
+                            Ok(result) => {
+                                let mut guard = all_files.lock().expect("A Valid Mutex Guard"); // Lock the Mutex
+                                guard.push(result); // Mutate the Vec inside the Mutex
+                            }
+                            Err(err) => {
+                                if let Some(io_err) = err.downcast_ref::<std::io::Error>() {
+                                    if io_err.kind() == std::io::ErrorKind::PermissionDenied {
+                                        eprintln!("System Error: \x1b[0;31m{}\x1b[0m", err);
+                                    } else {
+                                        eprintln!("Not found error: \x1b[0;31m{}\x1b[0m", err);
+                                    }
+                                }
                             }
                         }
                     }
@@ -151,7 +205,7 @@ fn main() {
     let out_file = args.out_file;
     // "Benchmarking"
     let start = std::time::Instant::now();
-    let processed_files = visit_dirs(path, threads, access_cufoff);
+    let processed_files = visit_dirs(path, threads, access_cufoff, args.directories);
     let untouched_files = processed_files.len();
     match write_data(processed_files, &out_file) {
         Ok(_) => {

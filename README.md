@@ -120,14 +120,14 @@ target
 ## Usage
 
 ```bash
-target/aarch64-apple-darwin/release/dfs_usage_audit --help
 Usage: dfs_usage_audit [OPTIONS] --path <PATH>
 
 Options:
-  -o, --out-file <OUT_FILE>  [default: DFS_audit.csv]
-  -p, --path <PATH>
-  -t, --threads <THREADS>    [default: 50]
-  -d, --days <DAYS>          [default: 1095]
+  -o, --out-file <OUT_FILE>  Relative path to export audit results. [default: DFS_audit.csv]
+  -p, --path <PATH>          The path to the directory/DFS space you wish to audit.
+  -d, --directories          Whether to include only directories. Does not take a value
+  -t, --threads <THREADS>    The amount of threads to use for performance.Higher is faster, but can be less accurate. I've found 50 to be the best tradeoff. Never inaccurate. [default: 50]
+  -d, --days <DAYS>          Cut-off, in days, to include. e.g. 365 to show files not accessed in the last year. [default: 1095]
   -h, --help                 Print help
   -V, --version              Print version
 ```
