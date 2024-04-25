@@ -6,11 +6,11 @@ use chrono::{DateTime, Duration, Utc};
 use rayon::prelude::*;
 use std::path::Path;
 // use walkdir::WalkDir;
+use clap::Parser;
 use csv::Writer;
+use indicatif::{ProgressBar, ProgressStyle};
 use jwalk::WalkDir;
 use std::sync::Mutex;
-
-use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -116,12 +116,23 @@ fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64, dirs_only: bool) -
     );
     if dir.is_dir() {
         // Thread count for the par_iter()
+        let pb = ProgressBar::new(entries.len() as u64);
+        let pb = Mutex::new(pb);
+        pb.lock().expect("Expecting to successfully lock pb").set_style(
+        ProgressStyle::with_template(
+            "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] ({pos}/{len}, ETA {eta})",
+        )
+        .expect("Expected to successfully create a progress bar style.")
+    );
         rayon::ThreadPoolBuilder::new()
             .num_threads(threads)
             .build()
             .expect("A Valid Rayon pool.");
         entries.par_iter().for_each(|entry| match entry {
             Ok(entry) => {
+                pb.lock()
+                    .expect("Expected to lock PB again during OK arm")
+                    .inc(1);
                 let path = entry.path();
                 // NOTE: Match statement determines behavior based on the dirs_only bool which
                 // is passed by the user at run time
@@ -137,9 +148,9 @@ fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64, dirs_only: bool) -
                             Err(err) => {
                                 if let Some(io_err) = err.downcast_ref::<std::io::Error>() {
                                     if io_err.kind() == std::io::ErrorKind::PermissionDenied {
-                                        eprintln!("System Error: \x1b[0;31m{}\x1b[0m", err);
+                                        // eprintln!("System Error: \x1b[0;31m{}\x1b[0m", err);
                                     } else {
-                                        eprintln!("Not found error: \x1b[0;31m{}\x1b[0m", err);
+                                        // eprintln!("Not found error: \x1b[0;31m{}\x1b[0m", err);
                                     }
                                 }
                             }
@@ -158,9 +169,9 @@ fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64, dirs_only: bool) -
                             Err(err) => {
                                 if let Some(io_err) = err.downcast_ref::<std::io::Error>() {
                                     if io_err.kind() == std::io::ErrorKind::PermissionDenied {
-                                        eprintln!("System Error: \x1b[0;31m{}\x1b[0m", err);
+                                        // eprintln!("System Error: \x1b[0;31m{}\x1b[0m", err);
                                     } else {
-                                        eprintln!("Not found error: \x1b[0;31m{}\x1b[0m", err);
+                                        // eprintln!("Not found error: \x1b[0;31m{}\x1b[0m", err);
                                     }
                                 }
                             }
@@ -168,8 +179,11 @@ fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64, dirs_only: bool) -
                     }
                 }
             }
-            Err(err) => {
-                println!("Permissions Error: \x1b[0;31m{}\x1b[0m", err);
+            Err(_err) => {
+                pb.lock()
+                    .expect("Expected to lock PB again during err arm")
+                    .inc(1);
+                // println!("Permissions Error: \x1b[0;31m{}\x1b[0m", err);
             }
         });
     } else {
