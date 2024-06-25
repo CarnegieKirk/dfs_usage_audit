@@ -224,7 +224,7 @@ fn main() {
     let untouched_files = processed_files.len();
     match write_data(processed_files, &out_file) {
         Ok(_) => {
-            println!("Data written to {}", out_file);
+            println!("Data written to \x1b[0;32m{}\x1b[0m", out_file);
         }
         Err(err) => {
             eprintln!("Error {}", err);
