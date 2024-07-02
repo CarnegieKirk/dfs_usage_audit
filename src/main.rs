@@ -116,6 +116,7 @@ fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64, dirs_only: bool) -
         start.elapsed()
     );
     if dir.is_dir() {
+
         // Thread count for the par_iter()
         let pb = ProgressBar::new(entries.len() as u64);
         let pb = Mutex::new(pb);
