@@ -84,7 +84,6 @@ fn return_access_stamp(
 /**
   Checks to see if a given date is within the last days_since days.
   ```
-  // TODO: Three years
   let access_cutoff: i64 = 1095;
   let datetime: DateTime<Utc> = DateTime::from_naive_utc_and_offset(file_time_readable, Utc);
   check_within_spec_time(datetime, access_cutoff);
@@ -116,7 +115,6 @@ fn visit_dirs(dir: &Path, threads: usize, access_cutoff: i64, dirs_only: bool) -
         start.elapsed()
     );
     if dir.is_dir() {
-
         // Thread count for the par_iter()
         let pb = ProgressBar::new(entries.len() as u64);
         let pb = Mutex::new(pb);
