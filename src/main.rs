@@ -24,7 +24,7 @@ struct Args {
     )]
     path: String,
     #[arg(
-        short,
+        short = 'D',
         long,
         help = "Whether to include only directories. Does not take a value",
         action
