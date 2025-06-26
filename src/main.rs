@@ -1,11 +1,9 @@
-// use std::os::macos::fs::MetadataExt;
 use filetime::{self, FileTime};
 use std::{error::Error, fs, sync::Arc};
 extern crate chrono;
 use chrono::{DateTime, Duration, Utc};
 use rayon::prelude::*;
 use std::path::Path;
-// use walkdir::WalkDir;
 use clap::Parser;
 use csv::Writer;
 use indicatif::{ProgressBar, ProgressStyle};
