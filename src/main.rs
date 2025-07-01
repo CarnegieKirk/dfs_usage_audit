@@ -2,12 +2,12 @@ use filetime::{self, FileTime};
 use std::{error::Error, fs, sync::Arc};
 extern crate chrono;
 use chrono::{DateTime, Duration, Utc};
-use rayon::prelude::*;
-use std::path::Path;
 use clap::Parser;
 use csv::Writer;
 use indicatif::{ProgressBar, ProgressStyle};
 use jwalk::WalkDir;
+use rayon::prelude::*;
+use std::path::Path;
 use std::sync::Mutex;
 
 #[derive(Parser, Debug)]
@@ -61,13 +61,9 @@ fn return_access_stamp(
     access_cutoff: i64,
 ) -> Result<FileResult, Box<dyn std::error::Error>> {
     let metadata = fs::metadata(file)?;
-    // Shows the timestamp of the last access date.
     let access_time = FileTime::from_last_access_time(&metadata).unix_seconds();
     let datetime = DateTime::<Utc>::from_timestamp(access_time, 0).expect("A Valid date time.");
-    // Format the datetime how you want
     let readable_time = &datetime.format("%Y-%m-%d %H:%M:%S");
-    // Print the newly formatted date and time
-    // Shows file not accessed within the last X days.
     if !check_within_spec_time(datetime, access_cutoff) {
         let this_file = FileResult {
             path: file.to_string_lossy().to_string(),
