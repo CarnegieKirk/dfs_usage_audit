@@ -1,4 +1,5 @@
 use filetime::{self, FileTime};
+use std::os::unix::fs::MetadataExt;
 use std::{error::Error, fs, sync::Arc};
 extern crate chrono;
 use chrono::{DateTime, Duration, Utc};
@@ -31,7 +32,7 @@ struct Args {
     #[arg(
         short,
         long,
-        help = "The amount of threads to use for performance.Higher is faster, but can be less accurate. I've found 50 to be the best tradeoff. Never inaccurate.",
+        help = "The amount of threads to use for performance. Higher is faster, but can be less accurate. I've found 50 to be the best tradeoff. Never inaccurate.",
         default_value_t = 50
     )]
     threads: usize,
@@ -200,6 +201,17 @@ fn write_data(data: Vec<FileResult>, filename: &str) -> Result<(), Box<dyn Error
     Ok(())
 }
 
+fn get_size(file_path: &String) -> u64 {
+    let metadata = match fs::metadata(file_path) {
+        Ok(data) => data.size(),
+        Err(e) => {
+            eprintln!("OH NO: {}", e);
+            panic!();
+        }
+    };
+    metadata
+}
+
 fn main() {
     // Specify the path to the directory you want to start the recursive iteration
     let args = Args::parse();
@@ -217,7 +229,11 @@ fn main() {
     let untouched_files = processed_files.len();
     match write_data(processed_files, &out_file) {
         Ok(_) => {
-            println!("Data written to \x1b[0;32m{}\x1b[0m", out_file);
+            let size = get_size(&out_file);
+            println!(
+                "Data written to \x1b[0;32m{}\x1b[0m with size of {}",
+                out_file, size
+            );
         }
         Err(err) => {
             eprintln!("Error {}", err);
