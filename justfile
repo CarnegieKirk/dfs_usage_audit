@@ -1,5 +1,5 @@
 # use PowerShell instead of sh:
-set shell := ["pwsh.exe", "-NoProfile", "-c"]
+# set shell := ["pwsh.exe", "-NoProfile", "-c"]
 
 default_opts := "--path \"S:\\\" -D"
 
@@ -17,3 +17,6 @@ slow:
 
 hypr:
   hyperfine --shell 'pwsh -NoProfile' '.\target\release\dfs_usage_audit.exe {{default_opts}}' '.\target\debug\dfs_usage_audit.exe {{default_opts}}' --runs 5
+
+shell:
+  nix shell
